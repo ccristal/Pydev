@@ -18,6 +18,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
@@ -512,13 +514,34 @@ public class PydevPlugin extends AbstractUIPlugin {
         return name;
     }
 
+    private static String getElePath(Object element) {
+        if (element instanceof IResource) {
+            IResource resource = (IResource) element;
+            URI locationURI = resource.getLocationURI();
+            try {
+                IFileStore store = EFS.getStore(locationURI);
+                File file = store.toLocalFile(0, null);
+                return file.toString();
+            } catch (CoreException ex) {
+                Log.log(ex);
+            }
+        }
+        return null;
+    }
+
     /**
      * Given a resource get the string in the filesystem for it.
      */
     public static String getIResourceOSString(IResource f) {
         URI locationURI = f.getLocationURI();
         if (locationURI != null) {
-            return FileUtils.getFileAbsolutePath(new File(locationURI));
+            String path = PydevPlugin.getElePath(f);
+            //            try {
+            //                path = FileUtils.getFileAbsolutePath(new File(locationURI));
+            //            } catch (IllegalArgumentException iae) {
+            //                path = PydevPlugin.getElePath(f);
+            //            }
+            return path;
         }
 
         IPath rawLocation = f.getRawLocation();
